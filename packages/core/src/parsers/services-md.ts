@@ -1,5 +1,15 @@
 import type { ChecklistItem, CostServiceRow } from "../types.js";
 
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/__([^_]+)__/g, "$1")
+    .trim();
+}
+
 function parseTableRows(markdown: string, headerNeedle: string): string[][] {
   const lines = markdown.split("\n");
   let start = -1;
@@ -19,7 +29,7 @@ function parseTableRows(markdown: string, headerNeedle: string): string[][] {
     const cells = line
       .split("|")
       .slice(1, -1)
-      .map((c) => c.trim());
+      .map((c) => stripMarkdown(c.trim()));
     if (cells.length > 1) rows.push(cells);
   }
   return rows;
@@ -36,11 +46,11 @@ export function parseChecklistFromServices(markdown: string): ChecklistItem[] {
 
 function mapChecklistRows(rows: string[][]): ChecklistItem[] {
   return rows.map((cells, i) => {
-    const statusCell = cells[4] ?? cells[3] ?? "";
+    const raw = cells.join(" ");
     let status: ChecklistItem["status"] = "pending";
-    if (statusCell.includes("✅")) status = "ok";
-    else if (statusCell.includes("🔶") || statusCell.includes("⚠")) status = "warn";
-    else if (statusCell.includes("⏭")) status = "phase2";
+    if (raw.includes("✅")) status = "ok";
+    else if (raw.includes("🔶") || raw.includes("⚠")) status = "warn";
+    else if (raw.includes("⏭")) status = "phase2";
     return {
       id: `chk-${i}`,
       service: cells[1] ?? cells[0] ?? "Unknown",
@@ -62,17 +72,20 @@ export function parseCostServicesFromServices(markdown: string): CostServiceRow[
 function mapCostRows(rows: string[][]): CostServiceRow[] {
   return rows.map((cells) => {
     const hasNumberCol = /^\d+$/.test(cells[0] ?? "");
-    const offset = hasNumberCol ? 1 : 0;
-    return {
-      service: cells[offset] ?? "",
-      plan: cells[offset + 4] ?? cells[offset + 3] ?? "",
-      monthly: cells[offset + 5] ?? cells[offset + 4] ?? "",
-      yearly: cells[offset + 6] ?? cells[offset + 5] ?? "",
-      renewal: cells[offset + 7] ?? "",
-      status: cells[offset + 8] ?? cells[offset + 7] ?? "",
-      dashboardUrl: extractUrl(cells[offset + 2] ?? cells[offset + 1] ?? ""),
-    };
-  });
+    const o = hasNumberCol ? 1 : 0;
+
+    const service = cells[o] ?? "";
+    if (!service) return null;
+
+    const dashboardUrl = extractUrl(cells[o + 2] ?? cells[o + 1] ?? "");
+    const plan = cells[o + 6] ?? cells[o + 4] ?? "";
+    const monthly = cells[o + 7] ?? cells[o + 5] ?? "";
+    const yearly = cells[o + 8] ?? cells[o + 6] ?? "";
+    const renewal = cells[o + 9] ?? "";
+    const status = cells[o + 10] ?? cells[o + 7] ?? "";
+
+    return { service, plan, monthly, yearly, renewal, status, dashboardUrl };
+  }).filter((r): r is CostServiceRow => r !== null && r.service.length > 0);
 }
 
 function extractUrl(text: string): string {
