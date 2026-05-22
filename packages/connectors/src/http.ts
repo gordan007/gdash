@@ -8,6 +8,8 @@ async function checkHttp(
 ): Promise<ConnectorResult> {
   const url = config.url || project.productionUrl;
   const start = Date.now();
+
+  // First try normal HEAD request
   try {
     const res = await fetch(url, {
       method: "HEAD",
@@ -23,14 +25,34 @@ async function checkHttp(
       checkedAt: new Date().toISOString(),
       meta: { statusCode: res.status, latencyMs: ms },
     };
-  } catch (e) {
-    return {
-      id: "http",
-      status: "error",
-      label: "Site",
-      message: e instanceof Error ? e.message : "Unreachable",
-      checkedAt: new Date().toISOString(),
-    };
+  } catch {
+    // Fallback: no-cors mode — gets opaque response (status 0) if server is up,
+    // throws if server is truly unreachable
+    try {
+      await fetch(url, {
+        method: "HEAD",
+        mode: "no-cors",
+        signal: AbortSignal.timeout(12000),
+      });
+      const ms = Date.now() - start;
+      // Opaque response = server responded, site is up
+      return {
+        id: "http",
+        status: "ok",
+        label: "Site",
+        message: `Reachable (${ms}ms)`,
+        checkedAt: new Date().toISOString(),
+        meta: { latencyMs: ms },
+      };
+    } catch (e) {
+      return {
+        id: "http",
+        status: "error",
+        label: "Site",
+        message: e instanceof Error ? e.message : "Unreachable",
+        checkedAt: new Date().toISOString(),
+      };
+    }
   }
 }
 

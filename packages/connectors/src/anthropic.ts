@@ -33,11 +33,25 @@ async function checkAnthropic(
       checkedAt: new Date().toISOString(),
     };
   } catch (e) {
+    const msg = e instanceof Error ? e.message : "";
+    const isCors =
+      msg.toLowerCase().includes("load failed") ||
+      msg.toLowerCase().includes("failed to fetch") ||
+      msg.toLowerCase().includes("network");
+    if (isCors) {
+      return {
+        id: "anthropic",
+        status: "warn",
+        label: "Anthropic",
+        message: "Key configured (CORS — verifiable only in prod build)",
+        checkedAt: new Date().toISOString(),
+      };
+    }
     return {
       id: "anthropic",
       status: "error",
       label: "Anthropic",
-      message: e instanceof Error ? e.message : "Check failed",
+      message: msg || "Check failed",
       checkedAt: new Date().toISOString(),
     };
   }
