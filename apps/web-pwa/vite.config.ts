@@ -28,6 +28,8 @@ export default defineConfig({
   resolve: {
     alias: {
       "@gdash/ui": path.resolve(__dirname, "../../packages/ui/src"),
+      "@gdash/connectors": path.resolve(__dirname, "../../packages/connectors/src/index.ts"),
+      "@gdash/core": path.resolve(__dirname, "../../packages/core/src/index.ts"),
     },
   },
   publicDir: path.resolve(__dirname, "../../services-docs"),
