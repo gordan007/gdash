@@ -22,10 +22,15 @@ export function HomePage() {
 
   const onImport = async () => {
     setImporting(true);
-    await importPresetsFromDocs(fetchServicesDoc);
-    await reload();
-    setImporting(false);
-    setOfferImport(false);
+    try {
+      await importPresetsFromDocs(fetchServicesDoc);
+      await reload();
+      setOfferImport(false);
+    } catch {
+      /* keep offer banner, user can retry */
+    } finally {
+      setImporting(false);
+    }
   };
 
   return (

@@ -8,7 +8,7 @@ import {
   type ProjectManifest,
   type ProjectStackType,
 } from "@gdash/core";
-import { listConnectors, runConnector, type ConnectorDescriptor } from "@gdash/connectors";
+import { listConnectors, runConnector } from "@gdash/connectors";
 import { Card } from "../components/ui/Card.js";
 import { Button } from "../components/ui/Button.js";
 import { Icon } from "../components/Icon.js";
