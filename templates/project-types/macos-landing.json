@@ -1,0 +1,6 @@
+{
+  "id": "macos-landing",
+  "label": "macOS app + Next.js landing",
+  "defaultConnectors": ["http", "github", "checklist", "vercel", "plausible"],
+  "servicesDocFile": "SERVICES.md"
+}

@@ -1,0 +1,6 @@
+{
+  "id": "expo-firebase",
+  "label": "Expo + Firebase",
+  "defaultConnectors": ["http", "github", "checklist", "firebase"],
+  "servicesDocFile": "SERVICES 3.md"
+}

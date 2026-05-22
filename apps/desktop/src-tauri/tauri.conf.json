@@ -1,0 +1,31 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "gdash",
+  "version": "0.1.0",
+  "identifier": "dev.gdash.app",
+  "build": {
+    "beforeDevCommand": "npm run dev -w @gdash/web-pwa",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "npm run build -w @gdash/web-pwa",
+    "frontendDist": "../web-pwa/dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "gdash",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 900,
+        "minHeight": 600
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; connect-src https: http: ws: wss:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": []
+  }
+}

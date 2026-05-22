@@ -1,0 +1,6 @@
+{
+  "id": "next-vercel-supabase",
+  "label": "Next.js + Vercel + Supabase",
+  "defaultConnectors": ["http", "github", "checklist", "vercel", "supabase", "anthropic"],
+  "servicesDocFile": "SERVICES 2.md"
+}
