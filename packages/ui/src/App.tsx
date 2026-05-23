@@ -9,6 +9,7 @@ import { GlobalCostsPage } from "./pages/GlobalCostsPage.js";
 import { WizardPage } from "./pages/WizardPage.js";
 import { SettingsPage } from "./pages/SettingsPage.js";
 import { ProjectSettingsPage } from "./pages/ProjectSettingsPage.js";
+import { VercelAnalyticsDashboardPage } from "./pages/VercelAnalyticsDashboardPage.js";
 import "./styles/globals.css";
 
 export function App() {
@@ -23,6 +24,7 @@ export function App() {
               <Route path="projects/new" element={<ErrorBoundary><WizardPage /></ErrorBoundary>} />
               <Route path="projects/:slug" element={<ErrorBoundary><ProjectDashboardPage /></ErrorBoundary>} />
               <Route path="projects/:slug/costs" element={<ErrorBoundary><ProjectCostsPage /></ErrorBoundary>} />
+              <Route path="projects/:slug/analytics" element={<ErrorBoundary><VercelAnalyticsDashboardPage /></ErrorBoundary>} />
               <Route path="projects/:slug/settings" element={<ErrorBoundary><ProjectSettingsPage /></ErrorBoundary>} />
               <Route path="costs" element={<ErrorBoundary><GlobalCostsPage /></ErrorBoundary>} />
               <Route path="settings" element={<ErrorBoundary><SettingsPage /></ErrorBoundary>} />

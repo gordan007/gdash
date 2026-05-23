@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
-import { AlertTriangle, ExternalLink, FolderOpen, RefreshCw, Wallet } from "lucide-react";
+import { AlertTriangle, BarChart2, ExternalLink, FolderOpen, RefreshCw, Wallet } from "lucide-react";
 import { formatStaleMinutes } from "@gdash/connectors";
 import { useGdash, useProject } from "../context/GdashContext.js";
 import { Card } from "../components/ui/Card.js";
@@ -44,6 +44,7 @@ export function ProjectDashboardPage() {
   const stale = cache ? formatStaleMinutes(cache.refreshedAt) : null;
   const isStale = stale !== null && stale > 20;
 
+  const analyticsResult = vercel;
   const revenueResult = revenuecat ?? lemonsqueezy;
 
   return (
@@ -94,6 +95,12 @@ export function ProjectDashboardPage() {
                   Repo
                 </Button>
               )}
+              <Link to={`/projects/${slug}/analytics`}>
+                <Button variant="secondary">
+                  <Icon icon={BarChart2} size={16} />
+                  Analytics
+                </Button>
+              </Link>
               <Link to={`/projects/${slug}/costs`}>
                 <Button variant="primary">
                   <Icon icon={Wallet} size={16} className="text-white" />
@@ -104,7 +111,7 @@ export function ProjectDashboardPage() {
           </div>
         </Card>
 
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             title="Site"
             value={http?.meta?.statusCode?.toString() ?? "—"}
@@ -130,6 +137,13 @@ export function ProjectDashboardPage() {
             sub={github?.message?.slice(0, 24) ?? vercel?.message?.slice(0, 24)}
             result={github ?? vercel}
             loading={refreshing && !github && !vercel}
+          />
+          <MetricCard
+            title="Analytics"
+            value={analyticsResult?.status === "ok" ? "Live" : "—"}
+            sub={analyticsResult ? "Vercel Analytics" : undefined}
+            result={analyticsResult}
+            loading={refreshing && !analyticsResult}
           />
           <MetricCard
             title="Revenue"

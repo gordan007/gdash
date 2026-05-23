@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
+  BarChart2,
   Bell,
   FolderKanban,
   LayoutDashboard,
@@ -35,6 +36,7 @@ const mainNav = [
 function projectNav(slug: string) {
   return [
     { to: `/projects/${slug}`, icon: LayoutDashboard, label: "Overview" },
+    { to: `/projects/${slug}/analytics`, icon: BarChart2, label: "Analytics" },
     { to: `/projects/${slug}/costs`, icon: Wallet, label: "Costs" },
     { to: `/projects/${slug}/settings`, icon: Settings, label: "Settings" },
   ];
