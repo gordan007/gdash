@@ -10,19 +10,19 @@
 
 ### Što je auto-popunjeno (2026-05-22)
 
-Iz repoa: URL-ovi, GitHub org, env vrijednosti, bundle ID, verzije, Plausible script ID, status live stranica.  
+Iz repoa: URL-ovi, GitHub org, env vrijednosti, bundle ID, verzije, Vercel Analytics paket, status live stranica.  
 U **`SERVICES.private.md`**: puni `RESEND_API_KEY` i env blok za Vercel.
 
 | Još **moraš** sam (nema u Gitu) | |
 |--------------------------------|--|
 | Apple ID, Team ID, app-specific password | |
-| Login za Vercel / Resend / Plausible / Lemon Squeezy | |
+| Login za Vercel / Resend / Lemon Squeezy | |
 | Registrar domene, MX za support@ | |
 | Mjesečni iznosi s faktura | |
 | Zamijeniti `REPLACE` u Lemon Squeezy checkout URL | |
 | Sparkle ED25519 ključevi | |
 
-**Revizija #3 (2026-05-22):** ponovno pregledano svih **22 Swift** datoteka u `FlowKeep/` (samo `Sparkle` + Apple frameworki), **cijeli** `landing/` (jedini vanjski script = Plausible), `.github/workflows/ci.yml`, `project.yml`, `Info.plist`, `AppConfig.swift`, env primjer — **nema skrivenog trećeg SaaS-a u kodu.**
+**Revizija #3 (2026-05-22):** ponovno pregledano svih **22 Swift** datoteka u `FlowKeep/` (samo `Sparkle` + Apple frameworki), **cijeli** `landing/` (jedini vanjski script = Vercel Analytics `@vercel/analytics/react`), `.github/workflows/ci.yml`, `project.yml`, `Info.plist`, `AppConfig.swift`, env primjer — **nema skrivenog trećeg SaaS-a u kodu.**
 
 ---
 
@@ -33,13 +33,13 @@ U **`SERVICES.private.md`**: puni `RESEND_API_KEY` i env blok za Vercel.
 | Apple Developer Program | Individual | _upiši_ | 99 | Team ID još `YOUR_TEAM_ID` |
 | Vercel (landing) | _upiši_ | _upiši_ | | Projekt `flowkeep-app`, live na `.dev` |
 | Resend | Free (pretpostavka) | 0 | | Audience ID u env |
-| Plausible Analytics | _upiši_ | _upiši_ | | Script aktivan na produkciji |
+| Vercel Analytics | Uklj. u Vercel plan | 0 / varijabilno | | `@vercel/analytics/react` — aktivno |
 | Lemon Squeezy | Store | _% od prodaje_ | | Checkout `/buy/REPLACE` |
 | GitHub (+ Actions) | Free (gordan007) | 0 | | Private repo `flowkeep-app` |
 | Domena `flowkeep.dev` | _upiši registrar_ | _upiši_ | _upiši_ | Vercel hosting potvrđen |
 | Email (support@) | _upiši_ | _upiši_ | | Adresa fiksna u kodu |
 | Google Search Console | Besplatno | 0 | | Planirano |
-| Vercel Analytics | — | 0 | | Planirano |
+| Vercel Analytics | Uklj. u Vercel | 0 | | ✅ aktivno u kodu |
 | **UKUPNO (fiksno)** | | **_upiši_** | **99+** | Cijene planova samo u dashboardima |
 
 ---
@@ -51,7 +51,7 @@ U **`SERVICES.private.md`**: puni `RESEND_API_KEY` i env blok za Vercel.
 | 1 | **Apple Developer** | Signing, notarizacija, Developer ID | https://developer.apple.com | **gordan.valenta@gmail.com** | → `SERVICES.private.md` | `ExportOptions.plist` → `YOUR_TEAM_ID` | $99/god | — | 99 EUR | godišnje | ☐ |
 | 2 | **Vercel** | Hosting Next.js landinga | https://flowkeep.dev · https://flowkeep-app.vercel.app | **gordan.valenta@gmail.com** | Env ×4 → private | `flowkeep-app`, region **fra1** | _plan upiši_ | _upiši_ | | | ✅ Live |
 | 3 | **Resend** | Waitlist / audience | https://resend.com/api-keys | **gordan.valenta@gmail.com** | `re_Hg4ax…` → **private** | Audience `40bab1f1-0f56-499e-af4d-859c184b58a7` | Free? | 0 | | | 🔄 |
-| 4 | **Plausible** | Analytics | https://plausible.io/flowkeep.dev | **gordan.valenta@gmail.com** | Script ID (javno u kodu) | `pa-tQW_Cq_UV3Sg2asjsBMHO.js` | _plan upiši_ | _upiši_ | | | ✅ |
+| 4 | **Vercel Analytics** | Web analitika | https://vercel.com/gordan007/flowkeep-app/analytics | **gordan.valenta@gmail.com** | — (bez API ključa) | `@vercel/analytics/react` u `layout.tsx` | Uklj. u Vercel plan | 0 | | | ✅ |
 | 5 | **Lemon Squeezy** | Plaćanja + licence **€19** | https://flowkeep.lemonsqueezy.com | **gordan.valenta@gmail.com** | Store API → private | `…/buy/REPLACE` (još placeholder) | % fee | var. | | | 🔄 |
 | 6 | **GitHub** | Source + CI | https://github.com/gordan007/flowkeep-app | **gordan007** | PAT → private | `git@` remote: `…/flowkeep-app.git` | Free? | 0 | | | ✅ |
 | 7 | **GitHub Releases** | DMG + appcast | https://github.com/gordan007/flowkeep-releases | **gordan007** | — | Public repo; **još nema releasea** (DMG 404) | Free | 0 | | | ⚠️ |
@@ -75,7 +75,7 @@ U **`SERVICES.private.md`**: puni `RESEND_API_KEY` i env blok za Vercel.
 | Servis | Svrha | Gdje spomenuto | Status |
 |--------|-------|----------------|--------|
 | **Google Search Console** | SEO, indeksacija `flowkeep.dev` | `PRODUCT_STRATEGY.md` checklist | ☐ |
-| **Vercel Analytics** | Sekundarna web analitika | `PRODUCT_STRATEGY.md` checklist | ☐ |
+| **Vercel Analytics** | Web analitika | `layout.tsx` — `@vercel/analytics/react` | ✅ aktivno |
 | **Mac App Store Connect** | App Store distribucija (IOPM-only build) | `PRODUCT_STRATEGY.md` Part 10 | ☐ budućnost |
 | **Vercel Edge Middleware** | A/B testovi landingu | `PRODUCT_STRATEGY.md` §9 | ☐ budućnost |
 | **iCloud** | Sync postavki (V2.0) | `PRODUCT_STRATEGY.md` roadmap | ☐ budućnost |
@@ -151,7 +151,7 @@ Gumroad, Stripe (direktno), Supabase, Firebase, Auth0, Sentry, PostHog, Mixpanel
 | Billing email | |
 | TLS / SSL cert | Automatski (Let's Encrypt preko Vercela) |
 | Edge Middleware | Nije implementirano (plan u strategiji) |
-| Vercel Analytics | Nije uključeno u kod (planirano) |
+| Vercel Analytics | `@vercel/analytics/react` — `<Analytics />` u `layout.tsx` |
 | Deploy alat | **Vercel CLI** (`npx vercel`) — koristi se za deploy, nije u `package.json` |
 | Node.js runtime | 20+ (lokalno + GitHub Actions + Vercel serverless) |
 
@@ -187,17 +187,17 @@ Gumroad, Stripe (direktno), Supabase, Firebase, Auth0, Sentry, PostHog, Mixpanel
 
 ---
 
-### 4. Plausible Analytics
+### 4. Vercel Analytics
 
 | Polje | Vrijednost |
 |-------|------------|
-| Site ID / domena | `flowkeep.dev` |
-| Script URL (u kodu) | `https://plausible.io/js/pa-tQW_Cq_UV3Sg2asjsBMHO.js` |
-| Custom events | `download_click`, `buy_click`, `email_subscribe`, **`faq_expand`** |
-| Plan | |
-| Mjesečno | |
-| Cookie banner | Nije potreban (cookieless) |
-| Dashboard login | https://plausible.io |
+| Paket | `@vercel/analytics/react` |
+| Inicijalizacija | `<Analytics />` u `landing/app/layout.tsx` |
+| Custom eventi | `track()` iz `landing/lib/analytics.ts` |
+| Dashboard | https://vercel.com/gordan007/flowkeep-app/analytics |
+| Plan | Uklj. u Vercel plan (bez zasebnog troška) |
+| Cookie banner | Nije potreban (privacy-friendly) |
+| API ključ | Ne treba (automatski vezan uz Vercel projekt) |
 
 **Eventi u kodu** (`landing/lib/analytics.ts`):
 
@@ -208,7 +208,7 @@ Gumroad, Stripe (direktno), Supabase, Firebase, Auth0, Sentry, PostHog, Mixpanel
 | `email_subscribe` | `EmailCapture` nakon uspješnog POST-a |
 | `faq_expand` | `FAQ.tsx` — props: `{ question: faq.q }` |
 
-**Pageview:** automatski (Plausible script). **Nema** Vercel Analytics u kodu.
+**Pageview:** automatski (`<Analytics />` komponenta). Podaci vidljivi u Vercel dashboardu.
 
 ---
 
@@ -324,7 +324,7 @@ Gumroad, Stripe (direktno), Supabase, Firebase, Auth0, Sentry, PostHog, Mixpanel
 | Import | `landing/app/layout.tsx` — `next/font/google` |
 | Produkcija | Next **self-hosta** font na buildu (nema `fonts.googleapis.com` u runtime) |
 | Build-time | Preuzimanje s Google pri `npm run build` |
-| GDPR | Spomenuto u Privacy sekciji uz Plausible |
+| GDPR | Spomenuto u Privacy sekciji uz Vercel Analytics |
 
 ---
 
@@ -344,7 +344,7 @@ Gumroad, Stripe (direktno), Supabase, Firebase, Auth0, Sentry, PostHog, Mixpanel
 | Izvor | Destinacija | Kada |
 |-------|-------------|------|
 | Landing (browser) | `flowkeep.dev` | Pregled stranice |
-| Landing (browser) | `plausible.io` | Analytics script |
+| Landing (browser) | `vercel-insights.com` | Vercel Analytics |
 | Landing (server) | `api.resend.com` | POST `/api/subscribe` |
 | Landing (link) | `api.lemonsqueezy.com` / checkout URL | Buy CTA |
 | Landing (link) | `github.com/.../FlowKeep.dmg` | Download CTA |
@@ -360,7 +360,7 @@ Gumroad, Stripe (direktno), Supabase, Firebase, Auth0, Sentry, PostHog, Mixpanel
 | Sub-procesor | Podaci | Svrha |
 |--------------|--------|-------|
 | Vercel | IP (server logovi), hosting | Landing |
-| Plausible | Anonimizirani pageview/eventi | Analytics |
+| Vercel Analytics | Anonimizirani pageview/eventi | Analytics |
 | Resend | Email adresa (audience) | Waitlist |
 | Lemon Squeezy + Stripe | Email kupca, plaćanje, license key | Prodaja |
 | GitHub | — (samo download DMG-a, bez PII u appu) | Distribucija |
@@ -397,7 +397,7 @@ Gumroad, Stripe (direktno), Supabase, Firebase, Auth0, Sentry, PostHog, Mixpanel
 | GitHub PAT | GitHub Secrets / private doc | ❌ |
 | Apple Team ID | `ExportOptions.plist` | ⚠️ nije tajna, ali osobno |
 | npm token | Rijetko potrebno | ❌ |
-| Plausible account password | Dashboard | ❌ |
+| Vercel Analytics dashboard | Uklj. u Vercel login | — |
 | Lemon Squeezy dashboard login | Dashboard | ❌ |
 
 ---
@@ -409,7 +409,7 @@ Gumroad, Stripe (direktno), Supabase, Firebase, Auth0, Sentry, PostHog, Mixpanel
 | Apple Developer | | 30 dana prije |
 | Domena flowkeep.dev | | 30 dana prije |
 | Vercel (ako plaćeno) | | |
-| Plausible | | |
+| Vercel Analytics | — (uklj. u Vercel) | |
 | Resend (ako Pro) | | |
 | npm (ako plaćaš org) | | |
 | GitHub Actions (macOS minuti) | | |
@@ -443,12 +443,12 @@ Gumroad, Stripe (direktno), Supabase, Firebase, Auth0, Sentry, PostHog, Mixpanel
 - [ ] Vercel env vars (sva 4) na Production
 - [ ] Resend audience + API key
 - [ ] Lemon Squeezy product + checkout URL u env i `AppConfig.swift`
-- [ ] Plausible site za `flowkeep.dev`
+- [x] Vercel Analytics — `@vercel/analytics/react` u `layout.tsx`
 - [ ] DNS `flowkeep.dev` → Vercel
 - [ ] support@flowkeep.dev radi
 - [ ] `SERVICES.private.md` popunjen i backup u password manageru
 - [ ] Google Search Console — verifikacija domene
-- [ ] (Opcija) Vercel Analytics uključen
+- [x] Vercel Analytics uključen (`@vercel/analytics/react`)
 - [ ] GitHub Actions billing provjeren za private repo
 - [x] OG slika `landing/public/og-image.png` — **1200×630 PNG** (u repou)
 - [ ] Prvi GitHub Release na `flowkeep-releases` (DMG URL u env trenutno **404**)
@@ -464,7 +464,7 @@ Gumroad, Stripe (direktno), Supabase, Firebase, Auth0, Sentry, PostHog, Mixpanel
 | macOS mreža | `AppConfig.swift`, `LicenseValidator.swift`, `Info.plist`, svi `FlowKeep/**/*.swift` |
 | Landing env | `landing/.env.local.example`, `subscribe/route.ts` |
 | Landing linkovi / CTA | `Hero`, `Pricing`, `FinalCTA`, `Footer`, `Navigation`, `eula`, `not-found` |
-| Analytics | `layout.tsx`, `lib/analytics.ts`, `Button.tsx`, `EmailCapture.tsx`, **`FAQ.tsx` (`faq_expand`)** |
+| Analytics | `layout.tsx` (`<Analytics />`), `lib/analytics.ts` (`track()`), `Button.tsx`, `EmailCapture.tsx`, **`FAQ.tsx` (`faq_expand`)** |
 | CI | `.github/workflows/ci.yml` |
 | Dependencies | `landing/package.json`, `package-lock.json`, `project.yml` |
 | Strategija / plan | `PRODUCT_STRATEGY.md`, `README.md` |
@@ -486,7 +486,7 @@ Svaki red = jedna stvar pronađena u kodu. **Odjeljak** = gdje je opisano u ovom
 | # | Što postoji u repou | Odjeljak | U dokumentu? |
 |---|---------------------|----------|--------------|
 | 1 | `api.resend.com` + `RESEND_*` env | §3 Resend, Vercel env tablica | ✅ |
-| 2 | `plausible.io` script + eventi | §4 Plausible | ✅ |
+| 2 | `@vercel/analytics/react` + eventi | §4 Vercel Analytics | ✅ |
 | 3 | `api.lemonsqueezy.com` + checkout URL | §5 Lemon Squeezy | ✅ |
 | 4 | `instance_name=FlowKeep-macOS` (licenca) | §5 (runtime) | ✅ dodano |
 | 5 | Stripe (preko LS, ne direktno) | §5 Stripe sub-procesor | ✅ |
@@ -506,7 +506,7 @@ Svaki red = jedna stvar pronađena u kodu. **Odjeljak** = gdje je opisano u ovom
 | 19 | GitHub Actions `macos-15` / Node 20 | #13 | ✅ |
 | 20 | `support@flowkeep.dev` | §8, header | ✅ |
 | 21 | OG/Twitter meta `/og-image.png` | Checklist (asset nedostaje u repou) | ✅ |
-| 22 | Planirano: GSC, Vercel Analytics, App Store | Planirano tablica | ✅ |
+| 22 | Vercel Analytics (aktivno), GSC (planirano), App Store (budućnost) | §4 Vercel Analytics, Planirano tablica | ✅ |
 | 23 | Gumroad, Sentry, Supabase, … | „Nije u projektu” | ✅ (namjerno isključeno) |
 
 **Zaključak revizije #4:** u repou **nema** četvrtog SaaS-a koji nedostaje u dokumentu. Prazna polja u tablicama = podaci **izvan repoa** (login, cijene, registrar), ne zaboravljen servis.
@@ -529,4 +529,4 @@ Svaki red = jedna stvar pronađena u kodu. **Odjeljak** = gdje je opisano u ovom
 1. **Struktura i URL-ovi** — ostaju u `SERVICES.md` (commit u Git).
 2. **Lozinke i API ključevi** — upiši u `SERVICES.private.md` (kopiraj strukturu iz tablica gore).
 3. **Mjesečne iznose** — ažuriraj redak „Sažetak mjesečnih troškova” nakon svake fakture.
-4. **Kvartalno** — provjeri Plausible + Resend + Vercel usage i Lemon Squeezy payout.
+4. **Kvartalno** — provjeri Vercel Analytics + Resend + Vercel usage i Lemon Squeezy payout.

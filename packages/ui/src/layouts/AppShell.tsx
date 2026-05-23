@@ -101,9 +101,7 @@ export function AppShell() {
         )}
       >
         <div className="mb-6 flex items-center gap-2 px-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--btn-primary-bg)] text-sm font-bold text-white">
-            g
-          </div>
+          <img src="/logo.png" alt="gdash" className="h-9 w-9 object-contain" />
           <span className="text-lg font-semibold">gdash</span>
         </div>
         <button

@@ -8,9 +8,10 @@ export function getPlatform(): Platform {
 }
 
 export async function openExternal(url: string): Promise<void> {
-  const w = window as Window & { __TAURI__?: { opener?: { openUrl: (u: string) => Promise<void> } } };
-  if (w.__TAURI__?.opener?.openUrl) {
-    await w.__TAURI__.opener.openUrl(url);
+  const invoke = (window as Window & { __TAURI_INTERNALS__?: { invoke: (cmd: string, args: object) => Promise<unknown> } })
+    .__TAURI_INTERNALS__?.invoke;
+  if (invoke) {
+    await invoke("plugin:opener|open_url", { url, openWith: null });
     return;
   }
   window.open(url, "_blank", "noopener,noreferrer");

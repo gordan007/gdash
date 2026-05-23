@@ -38,14 +38,12 @@ export function ProjectDashboardPage() {
   const results = cache?.connectorResults ?? [];
   const http = results.find((r) => r.id === "http");
   const github = results.find((r) => r.id === "github");
-  const plausible = results.find((r) => r.id === "plausible");
   const vercel = results.find((r) => r.id === "vercel");
   const revenuecat = results.find((r) => r.id === "revenuecat");
   const lemonsqueezy = results.find((r) => r.id === "lemonsqueezy");
   const stale = cache ? formatStaleMinutes(cache.refreshedAt) : null;
   const isStale = stale !== null && stale > 20;
 
-  const analyticsResult = plausible ?? vercel;
   const revenueResult = revenuecat ?? lemonsqueezy;
 
   return (
@@ -106,7 +104,7 @@ export function ProjectDashboardPage() {
           </div>
         </Card>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-3">
           <MetricCard
             title="Site"
             value={http?.meta?.statusCode?.toString() ?? "—"}
@@ -132,17 +130,6 @@ export function ProjectDashboardPage() {
             sub={github?.message?.slice(0, 24) ?? vercel?.message?.slice(0, 24)}
             result={github ?? vercel}
             loading={refreshing && !github && !vercel}
-          />
-          <MetricCard
-            title="Analytics"
-            value={
-              analyticsResult?.meta?.visitors != null
-                ? String(analyticsResult.meta.visitors)
-                : "—"
-            }
-            sub={analyticsResult ? "7d visitors" : undefined}
-            result={analyticsResult}
-            loading={refreshing && !analyticsResult}
           />
           <MetricCard
             title="Revenue"

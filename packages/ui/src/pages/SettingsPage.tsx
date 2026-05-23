@@ -19,7 +19,6 @@ export function SettingsPage() {
   const [tokens, setTokens] = useState<Record<string, string>>({});
   const [savedKeys, setSavedKeys] = useState<string[]>([]);
   const [saved, setSaved] = useState(false);
-
   const tokenFields: TokenField[] = listConnectors()
     .flatMap((c) =>
       (c.secretKeys ?? []).map((sk) => ({
@@ -101,29 +100,29 @@ export function SettingsPage() {
                 {fields.map((f) => {
                   const hasSaved = savedKeys.includes(f.key);
                   return (
-                    <div key={f.key} className="flex items-end gap-2">
-                      <label className="flex-1 text-sm font-medium">
-                        {f.key}
-                        <input
-                          type="password"
-                          className="mt-1 w-full rounded-xl border border-[var(--border-subtle)] px-3 py-2 outline-none focus:border-[var(--btn-primary-bg)]"
-                          placeholder={hasSaved ? "•••••••• (saved)" : f.placeholder}
-                          value={tokens[f.key] ?? ""}
-                          onChange={(e) =>
-                            setTokens((prev) => ({ ...prev, [f.key]: e.target.value }))
-                          }
-                        />
-                      </label>
-                      {hasSaved && (
-                        <Button
-                          variant="ghost"
-                          className="mb-0.5 !p-2 text-[var(--status-error)] hover:bg-red-50"
-                          onClick={() => deleteSecret(f.key)}
-                          aria-label={`Remove ${f.key}`}
-                        >
-                          <Icon icon={Trash2} size={15} />
-                        </Button>
-                      )}
+                    <div key={f.key}>
+                      <div className="flex items-end gap-2">
+                        <label className="flex-1 text-sm font-medium">
+                          {f.key}
+                          <input
+                            type="password"
+                            className="mt-1 w-full rounded-xl border border-[var(--border-subtle)] px-3 py-2 outline-none focus:border-[var(--btn-primary-bg)]"
+                            placeholder={hasSaved ? "•••••••• (saved)" : f.placeholder}
+                            value={tokens[f.key] ?? ""}
+                            onChange={(e) => setTokens((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                          />
+                        </label>
+                        {hasSaved && (
+                          <Button
+                            variant="ghost"
+                            className="mb-0.5 !p-2 text-[var(--status-error)] hover:bg-red-50"
+                            onClick={() => deleteSecret(f.key)}
+                            aria-label={`Remove ${f.key}`}
+                          >
+                            <Icon icon={Trash2} size={15} />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}

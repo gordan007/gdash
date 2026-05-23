@@ -10,7 +10,6 @@ export const BUILT_IN_CONNECTOR_IDS = [
   "github",
   "checklist",
   "vercel",
-  "plausible",
   "supabase",
   "firebase",
   "anthropic",

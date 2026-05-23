@@ -7,7 +7,6 @@ import "./github.js";
 import "./vercel.js";
 import "./supabase.js";
 import "./firebase.js";
-import "./plausible.js";
 import "./anthropic.js";
 import "./checklist.js";
 import "./revenuecat.js";

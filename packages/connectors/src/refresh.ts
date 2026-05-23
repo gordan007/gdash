@@ -14,7 +14,6 @@ const PREFERRED_ORDER = [
   "github",
   "checklist",
   "vercel",
-  "plausible",
   "supabase",
   "firebase",
   "anthropic",
