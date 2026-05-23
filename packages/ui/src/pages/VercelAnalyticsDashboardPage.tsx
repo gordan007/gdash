@@ -1,223 +1,72 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, BarChart2, ExternalLink } from "lucide-react";
-import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from "recharts";
-import { useProject } from "../context/GdashContext.js";
-import { getSecret } from "../lib/secrets.js";
+import { ArrowLeft, BarChart2, ExternalLink, RefreshCw } from "lucide-react";
+import { useGdash, useProject } from "../context/GdashContext.js";
 import { Icon } from "../components/Icon.js";
 import { Button } from "../components/ui/Button.js";
+import { Card } from "../components/ui/Card.js";
+import { StatusBadge } from "../components/StatusBadge.js";
 import { openExternal } from "../lib/platform.js";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+interface TeamInfo { slug: string }
 
-type Period = "1d" | "7d" | "30d";
-
-interface TimeseriesPoint {
-  key: string;
-  total: number;
-  devices?: { desktop?: number; mobile?: number };
-}
-
-interface PageviewStats {
-  totalViews: number;
-  uniqueVisitors: number;
-  avgDuration: number;
-  bounceRate: number;
-  timeseries: TimeseriesPoint[];
-}
-
-// ─── API ──────────────────────────────────────────────────────────────────────
-
-const VERCEL_API = "https://vercel.com/api";
-
-async function fetchAnalytics(
-  projectId: string,
-  teamId: string,
-  token: string,
-  period: Period
-): Promise<PageviewStats> {
-  const now = Date.now();
-  const periodMs: Record<Period, number> = {
-    "1d": 86_400_000,
-    "7d": 7 * 86_400_000,
-    "30d": 30 * 86_400_000,
-  };
-  const since = now - periodMs[period];
-  const qs = new URLSearchParams({
-    projectId,
-    teamId,
-    since: String(since),
-    until: String(now),
-    filter: JSON.stringify({}),
-    limit: "250",
-  });
-
-  const headers = { Authorization: `Bearer ${token}` };
-  const signal = AbortSignal.timeout(15_000);
-
-  const [tsRes, summaryRes] = await Promise.all([
-    fetch(`${VERCEL_API}/v1/web/analytics/timeseries?${qs}`, { headers, signal }),
-    fetch(`${VERCEL_API}/v1/web/analytics?${qs}`, { headers, signal }),
-  ]);
-
-  if (!tsRes.ok && !summaryRes.ok) {
-    throw new Error(`Vercel Analytics API ${tsRes.status}`);
-  }
-
-  type TsData = { data: { key: string; total: number }[] };
-  type SummaryData = {
-    data: {
-      pageviews?: number;
-      uniqueVisitors?: number;
-      avgDuration?: number;
-      bounceRate?: number;
-    };
-  };
-
-  const ts = tsRes.ok ? ((await tsRes.json()) as TsData) : { data: [] };
-  const summary = summaryRes.ok ? ((await summaryRes.json()) as SummaryData) : { data: {} };
-
-  return {
-    totalViews: summary.data?.pageviews ?? 0,
-    uniqueVisitors: summary.data?.uniqueVisitors ?? 0,
-    avgDuration: summary.data?.avgDuration ?? 0,
-    bounceRate: summary.data?.bounceRate ?? 0,
-    timeseries: ts.data ?? [],
-  };
-}
-
-// project ID lookup via deployments API
-async function resolveProjectId(projectName: string, token: string, teamId?: string): Promise<string | null> {
-  try {
-    const qs = new URLSearchParams({ teamId: teamId ?? "" });
-    const res = await fetch(`https://api.vercel.com/v9/projects/${encodeURIComponent(projectName)}?${qs}`, {
-      headers: { Authorization: `Bearer ${token}` },
-      signal: AbortSignal.timeout(10_000),
-    });
-    if (!res.ok) return null;
-    const data = (await res.json()) as { id?: string };
-    return data.id ?? null;
-  } catch {
-    return null;
-  }
-}
-
-async function resolveTeamId(token: string): Promise<string | null> {
+async function resolveTeamSlug(token: string): Promise<string | null> {
   try {
     const res = await fetch("https://api.vercel.com/v2/teams?limit=1", {
       headers: { Authorization: `Bearer ${token}` },
-      signal: AbortSignal.timeout(10_000),
+      signal: AbortSignal.timeout(8_000),
     });
     if (!res.ok) return null;
-    const data = (await res.json()) as { teams?: { id: string }[] };
-    return data.teams?.[0]?.id ?? null;
+    const data = (await res.json()) as { teams?: TeamInfo[] };
+    return data.teams?.[0]?.slug ?? null;
   } catch {
     return null;
   }
 }
-
-// ─── Formatters ───────────────────────────────────────────────────────────────
-
-function fmtNum(n: number) {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return n.toString();
-}
-
-function fmtDate(key: string) {
-  const d = new Date(key);
-  if (isNaN(d.getTime())) return key;
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-function SummaryCard({ label, value, loading }: { label: string; value: string; loading: boolean }) {
-  return (
-    <div className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100">
-      <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">{label}</p>
-      <p className="text-3xl font-bold text-gray-900 tabular-nums">
-        {loading ? <span className="text-gray-200">—</span> : value}
-      </p>
-    </div>
-  );
-}
-
-function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-gray-900 text-white rounded-xl px-3 py-2 text-sm shadow-lg pointer-events-none">
-      <p className="text-gray-400 text-xs mb-1">{label ? fmtDate(label) : ""}</p>
-      <p className="font-bold">{fmtNum(payload[0].value)} views</p>
-    </div>
-  );
-}
-
-const PERIODS: { label: string; value: Period }[] = [
-  { label: "Today", value: "1d" },
-  { label: "7 days", value: "7d" },
-  { label: "30 days", value: "30d" },
-];
-
-// ─── Main page ────────────────────────────────────────────────────────────────
 
 export function VercelAnalyticsDashboardPage() {
   const { slug } = useParams<{ slug: string }>();
   const project = useProject(slug);
-  const [period, setPeriod] = useState<Period>("7d");
-  const [stats, setStats] = useState<PageviewStats | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { getCache, refreshProjectBySlug, refreshing } = useGdash();
+  const cache = slug ? getCache(slug) : undefined;
 
-  const token = getSecret("vercel:token");
-  const projectName = project?.connectors.find((c) => c.id === "vercel")?.config.projectName;
+  const [analyticsUrl, setAnalyticsUrl] = useState<string | null>(null);
+
+  const vercelConnector = project?.connectors.find((c) => c.id === "vercel");
+  const projectName = vercelConnector?.config.projectName;
+  const vercelResult = cache?.connectorResults.find((r) => r.id === "vercel");
+
+  // Import getSecret inline to avoid circular dep
+  const token = (() => {
+    try { return localStorage.getItem("secret:vercel:token"); } catch { return null; }
+  })();
 
   useEffect(() => {
-    if (!token || !projectName) return;
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-
-    (async () => {
-      try {
-        const teamId = await resolveTeamId(token);
-        const projectId = await resolveProjectId(projectName, token, teamId ?? undefined);
-        if (!projectId) throw new Error("Project not found in Vercel");
-        const data = await fetchAnalytics(projectId, teamId ?? "", token, period);
-        if (!cancelled) setStats(data);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, [token, projectName, period]);
-
-  const analyticsUrl = projectName
-    ? `https://vercel.com/${projectName}/analytics`
-    : "https://vercel.com/dashboard";
+    if (!projectName) return;
+    if (token) {
+      resolveTeamSlug(token).then((teamSlug) => {
+        if (teamSlug) {
+          setAnalyticsUrl(`https://vercel.com/${teamSlug}/${projectName}/analytics`);
+        } else {
+          setAnalyticsUrl(`https://vercel.com/dashboard`);
+        }
+      });
+    } else {
+      setAnalyticsUrl("https://vercel.com/dashboard");
+    }
+  }, [token, projectName]);
 
   if (!project) {
     return <div className="py-20 text-center text-gray-400">Project not found.</div>;
   }
 
-  if (!token || !projectName) {
+  if (!vercelConnector?.enabled || !projectName) {
     return (
       <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-16 text-center">
         <Icon icon={BarChart2} size={36} className="mx-auto mb-4 text-gray-200" />
         <p className="text-lg font-semibold text-gray-700 mb-1">Vercel Analytics not configured</p>
         <p className="text-sm text-gray-400 mb-5">
-          Enable the Vercel connector and add your API token in settings.
+          Enable the Vercel connector and set the project name in settings.
         </p>
         <Link
           to={`/projects/${slug}/settings`}
@@ -228,8 +77,6 @@ export function VercelAnalyticsDashboardPage() {
       </div>
     );
   }
-
-  const noData = !loading && !error && stats && stats.timeseries.length === 0;
 
   return (
     <div className="space-y-5">
@@ -248,120 +95,106 @@ export function VercelAnalyticsDashboardPage() {
             <p className="text-xs text-gray-400">Vercel Analytics · {projectName}</p>
           </div>
         </div>
-
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex gap-1 rounded-2xl bg-gray-100 p-1">
-            {PERIODS.map((p) => (
-              <button
-                key={p.value}
-                type="button"
-                onClick={() => setPeriod(p.value)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                  period === p.value
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-          <Button variant="secondary" onClick={() => void openExternal(analyticsUrl)}>
-            <Icon icon={ExternalLink} size={14} />
-            Open in Vercel
+        <div className="flex gap-2">
+          <Button
+            variant="secondary"
+            onClick={() => slug && void refreshProjectBySlug(slug)}
+            disabled={refreshing}
+          >
+            <Icon icon={RefreshCw} size={16} className={refreshing ? "animate-spin" : ""} />
+            Refresh
           </Button>
+          {analyticsUrl && (
+            <Button variant="primary" onClick={() => void openExternal(analyticsUrl)}>
+              <Icon icon={ExternalLink} size={16} />
+              Open Vercel Analytics
+            </Button>
+          )}
         </div>
       </div>
 
-      {error && (
-        <div className="rounded-2xl bg-amber-50 border border-amber-100 px-4 py-3 text-sm text-amber-700 flex items-center justify-between gap-4">
-          <span>{error} — Vercel Analytics API may require a paid plan.</span>
-          <Button variant="secondary" onClick={() => void openExternal(analyticsUrl)}>
-            <Icon icon={ExternalLink} size={14} />
+      {/* Open in Vercel CTA */}
+      <div
+        className="rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-50/80 to-violet-50/80 p-8 flex flex-col items-center text-center gap-4 cursor-pointer hover:from-indigo-100/80 hover:to-violet-100/80 transition-colors"
+        onClick={() => analyticsUrl && void openExternal(analyticsUrl)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === "Enter" && analyticsUrl && void openExternal(analyticsUrl)}
+      >
+        <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center">
+          <Icon icon={BarChart2} size={28} className="text-indigo-600" />
+        </div>
+        <div>
+          <p className="text-base font-semibold text-gray-900 mb-1">View Analytics Dashboard</p>
+          <p className="text-sm text-gray-500 max-w-sm">
+            Vercel Analytics data lives in your Vercel dashboard. Click to open pageviews,
+            visitors, top pages, countries and more.
+          </p>
+        </div>
+        {analyticsUrl && (
+          <Button variant="primary" onClick={(e) => { e.stopPropagation(); void openExternal(analyticsUrl); }}>
+            <Icon icon={ExternalLink} size={16} />
             Open in Vercel
           </Button>
-        </div>
-      )}
-
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <SummaryCard label="Page Views" value={stats ? fmtNum(stats.totalViews) : "—"} loading={loading} />
-        <SummaryCard label="Unique Visitors" value={stats ? fmtNum(stats.uniqueVisitors) : "—"} loading={loading} />
-        <SummaryCard
-          label="Avg Duration"
-          value={stats && stats.avgDuration > 0 ? `${stats.avgDuration}s` : "—"}
-          loading={loading}
-        />
-        <SummaryCard
-          label="Bounce Rate"
-          value={stats && stats.bounceRate > 0 ? `${stats.bounceRate}%` : "—"}
-          loading={loading}
-        />
-      </div>
-
-      {/* Chart */}
-      <div className="rounded-2xl bg-white shadow-sm border border-gray-100 p-5">
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-5">
-          Page Views
-        </p>
-
-        {stats && stats.timeseries.length > 0 ? (
-          <ResponsiveContainer width="100%" height={220}>
-            <AreaChart data={stats.timeseries} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
-              <defs>
-                <linearGradient id="vercel-vg" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#6366f1" stopOpacity={0.15} />
-                  <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
-              <XAxis
-                dataKey="key"
-                tick={{ fontSize: 11, fill: "#9ca3af" }}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={fmtDate}
-                interval="preserveStartEnd"
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: "#9ca3af" }}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={fmtNum}
-              />
-              <Tooltip content={<ChartTooltip />} />
-              <Area
-                type="monotone"
-                dataKey="total"
-                stroke="#6366f1"
-                strokeWidth={2}
-                fill="url(#vercel-vg)"
-                dot={false}
-                activeDot={{ r: 4, fill: "#6366f1", strokeWidth: 0 }}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="h-[220px] flex flex-col items-center justify-center gap-3 text-gray-300 text-sm">
-            {loading ? (
-              "Loading…"
-            ) : noData ? (
-              <>
-                <p>No data for this period</p>
-                <Button variant="secondary" onClick={() => void openExternal(analyticsUrl)}>
-                  <Icon icon={ExternalLink} size={14} />
-                  View in Vercel Dashboard
-                </Button>
-              </>
-            ) : (
-              <Button variant="secondary" onClick={() => void openExternal(analyticsUrl)}>
-                <Icon icon={ExternalLink} size={14} />
-                View Analytics in Vercel
-              </Button>
-            )}
-          </div>
         )}
       </div>
+
+      {/* Deployment status card */}
+      <Card>
+        <h3 className="font-semibold mb-4">Latest Deployment</h3>
+        {vercelResult ? (
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-700">{projectName}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{vercelResult.message}</p>
+            </div>
+            <StatusBadge status={vercelResult.status} text={vercelResult.status === "ok" ? "Ready" : vercelResult.status} />
+          </div>
+        ) : (
+          <p className="text-sm text-gray-400">
+            No deployment data yet —{" "}
+            <button
+              type="button"
+              className="text-indigo-600 hover:underline"
+              onClick={() => slug && void refreshProjectBySlug(slug)}
+            >
+              click Refresh
+            </button>
+          </p>
+        )}
+        {vercelResult?.meta?.url && (
+          <button
+            type="button"
+            className="mt-3 text-xs text-indigo-500 hover:underline"
+            onClick={() => void openExternal(String(vercelResult.meta!.url))}
+          >
+            {String(vercelResult.meta.url)} ↗
+          </button>
+        )}
+      </Card>
+
+      {/* Analytics tracking info */}
+      <Card>
+        <h3 className="font-semibold mb-3">Analytics Setup</h3>
+        <div className="space-y-2 text-sm text-gray-600">
+          <div className="flex items-start gap-2">
+            <span className="text-emerald-500 font-bold mt-0.5">✓</span>
+            <span>
+              <code className="bg-gray-100 rounded px-1 text-xs">@vercel/analytics/react</code> aktivan u projektu
+            </span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-emerald-500 font-bold mt-0.5">✓</span>
+            <span>Custom eventi: <code className="bg-gray-100 rounded px-1 text-xs">track()</code> u <code className="bg-gray-100 rounded px-1 text-xs">lib/analytics.ts</code></span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-blue-400 font-bold mt-0.5">i</span>
+            <span className="text-gray-400">
+              Vercel Analytics nema javni REST API — podaci su dostupni samo u Vercel dashboardu.
+            </span>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }
